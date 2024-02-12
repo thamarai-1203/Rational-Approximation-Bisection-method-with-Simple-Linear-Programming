@@ -1,0 +1,70 @@
+import numpy as np
+from scipy.optimize import linprog
+
+# Define the delicate function
+def f(x):
+  return 3 * x**2 + 1 / np.pi**4 * np.log((np.pi-x)**2) + 1
+
+# Generate Chebyshev nodes
+def generate_chebyshev_nodes(N):
+        interval = [-1, 1]
+        nodes = np.cos((2 * np.arange(1, N + 1) - 1) * np.pi / (2 * N))
+        return nodes
+
+def check_feasibility(f,z,N):
+        #3x1 + 2x2 <=7 example linear program
+        c=np.zeros(N) #coefficient for the object function
+        A= np.array([[3,2]]) #coefficient for the inequality constraint
+        b= np.array([7]) # RHS inequality constraint
+        result = linprog(c,A_ub=A,b_ub=b)
+        return result.success
+
+def bisection_algorithm(f, N):
+    # Parameters for the non-convex problem
+    l = 0
+    u = np.max(np.abs(f(generate_chebyshev_nodes(N))))  # Maximal deviation for a polynomial approximation
+    z = (u + l) / 2
+
+    while u - l > np.finfo(float).eps:
+        # Check feasibility using linear programming problem with current z
+        feasible_solution = check_feasibility(f, z, N,)
+
+        if feasible_solution:
+            u = z
+        else:
+            l = z
+
+        z = (u + l) / 2
+
+# Example
+        N = 10  # Replace with the desired number of nodes
+        result_bisection = bisection_algorithm(f,N)
+        print("Bisection Algorithm Result:",result_bisection)
+
+#Graph plot
+import matplotlib.pyplot as plt
+import numpy as np
+def f(x):
+  return 3 * x**2 + (1 / np.pi**4) * np.log((np.pi-x)**2) + 1 #3x1 + 2x2 <=7 example linear program
+x=np.linspace(-10,10,100)
+y=f(x)
+plt.plot(x,y)
+
+#Chebyshev Nodes
+def f(x):
+    return np.exp(x)
+N = 10
+nodes = generate_chebyshev_nodes(N)
+
+A = np.zeros((N, 2))
+b = np.ones(N)  # Modify the RHS coefficients according to the problem
+
+for i, node in enumerate(nodes):
+    A[i, :] = [f(node), 2] #A=[[f(_),2]]
+
+c = np.zeros(2) # c=[0,0]
+x0_bounds = (None, None)
+x1_bounds = (None, None)
+
+res = linprog(c, A_ub=A, b_ub=b, bounds=[x0_bounds, x1_bounds])
+print("Optimal Solution:", res.x)
